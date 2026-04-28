@@ -1,0 +1,6 @@
+Test Corporation Annual Report
+
+Total Revenue: $100 million
+Net Income: $10 million
+
+This is mock financial information for demo purposes only.
