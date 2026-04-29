@@ -13,6 +13,12 @@ from agents.observer_agent import (
 )
 from audit.audit_logger import audit_record
 
+# Agent modules with respond functions
+from agents import analyst as analyst_module
+from agents import researcher as researcher_module
+from agents import portfolio as portfolio_module
+from agents import consensus as consensus_module
+
 
 st.set_page_config(
     page_title="Financial Agents Using MCP",
@@ -42,22 +48,116 @@ agent_choice = st.sidebar.selectbox(
 
 show_logs = st.sidebar.checkbox("Show logs", value=True)
 
+if "last_agent_output" not in st.session_state:
+    st.session_state["last_agent_output"] = None
+
+if "display_mode" not in st.session_state:
+    st.session_state["display_mode"] = None
+
+# -----------------------------
+# Observer Agent
+# -----------------------------
 st.sidebar.divider()
 st.sidebar.subheader("Observer Agent")
 
-observer_symbol = st.sidebar.text_input("Symbol to monitor", value="AAPL")
+observer_symbol = st.sidebar.text_input(
+    "Symbol to monitor",
+    value=st.session_state.get("observer_symbol", "")
+)
+
+if "observer_running" not in st.session_state:
+    st.session_state["observer_running"] = False
+
+if "active_observer_symbol" not in st.session_state:
+    st.session_state["active_observer_symbol"] = observer_symbol
+
+if "show_last_observations" not in st.session_state:
+    st.session_state["show_last_observations"] = False
+
 
 if st.sidebar.button("Start Observer"):
-    result = start_background_observer(observer_symbol)
-    st.sidebar.success(result)
+    start_background_observer(observer_symbol)
+    st.session_state["observer_running"] = True
+    st.session_state["active_observer_symbol"] = observer_symbol
+    st.session_state["show_last_observations"] = False
+    st.session_state["display_mode"] = "live"
+    st.sidebar.success(f"Observer started for {observer_symbol}")
+
 
 if st.sidebar.button("Stop Observer"):
-    result = stop_background_observer(observer_symbol)
-    st.sidebar.warning(result)
+    stop_background_observer(st.session_state["active_observer_symbol"])
+    st.session_state["observer_running"] = False
+    st.session_state["display_mode"] = None
+    st.sidebar.warning(f"Observer stopped for {st.session_state['active_observer_symbol']}")
+
 
 if st.sidebar.button("Show Observations"):
-    observations = get_observations(observer_symbol)
-    st.sidebar.json(observations[-10:])
+    st.session_state["show_last_observations"] = True
+    st.session_state["display_mode"] = "last"
+
+
+# -----------------------------
+# Helpers (defined before use)
+# -----------------------------
+def extract_symbol_from_query(query: str):
+    """Extract stock symbol from query (handles tickers and common company names)."""
+    import re
+    query_lower = query.lower()
+
+    # Common company name to ticker mapping
+    company_to_ticker = {
+        'apple': 'AAPL',
+        'microsoft': 'MSFT',
+        'tesla': 'TSLA',
+        'amazon': 'AMZN',
+        'google': 'GOOGL',
+        'alphabet': 'GOOGL',
+        'meta': 'META',
+        'facebook': 'META',
+        'netflix': 'NFLX',
+        'nvidia': 'NVDA',
+        'amd': 'AMD',
+        'intel': 'INTC',
+        'ibm': 'IBM',
+        'oracle': 'ORCL',
+        'salesforce': 'CRM',
+        'adobe': 'ADBE',
+        'paypal': 'PYPL',
+        'visa': 'V',
+        'mastercard': 'MA',
+        'disney': 'DIS',
+        'walmart': 'WMT',
+        'target': 'TGT',
+        'costco': 'COST',
+        'starbucks': 'SBUX',
+        'mcdonalds': 'MCD',
+        'nike': 'NKE',
+        'coca-cola': 'KO',
+        'pepsi': 'PEP',
+        'johnson': 'JNJ',
+        'pfizer': 'PFE',
+        'boeing': 'BA',
+        'ford': 'F',
+        'general motors': 'GM',
+        'gm': 'GM',
+        'exxon': 'XOM',
+        'chevron': 'CVX',
+        'att': 'T',
+        'verizon': 'VZ',
+        't-mobile': 'TMUS',
+    }
+
+    # First check for company names
+    for company, ticker in company_to_ticker.items():
+        if company in query_lower:
+            return ticker
+
+    # Then look for uppercase ticker symbols (1-5 letters)
+    matches = re.findall(r'\b[A-Z]{1,5}\b', query)
+    common_words = {'I', 'A', 'AN', 'THE', 'AND', 'OR', 'TO', 'FOR', 'OF', 'IN', 'ON', 'AT', 'BY', 'WITH', 'IS', 'IT', 'BE', 'AS', 'MY'}
+    symbols = [m for m in matches if m not in common_words]
+
+    return symbols[0] if symbols else None
 
 
 # -----------------------------
@@ -65,13 +165,16 @@ if st.sidebar.button("Show Observations"):
 # -----------------------------
 st.subheader("Run Agent or Orchestrator")
 
-symbol = st.text_input("Stock Symbol", value="AAPL")
-
 prompt = st.text_area(
     "Query / Prompt",
-    value=f"Analyze {symbol} and generate a trading recommendation.",
+    value="",
     height=140,
 )
+
+# Extract symbol from query and update observer (runs before sidebar renders)
+symbol = extract_symbol_from_query(prompt) or ""
+if symbol:
+    st.session_state["observer_symbol"] = symbol
 
 run_clicked = st.button("Run")
 
@@ -90,10 +193,34 @@ def render_result(title, data):
     st.json(data)
 
 
+def render_agent_response(agent_name, response, prompt, extra_details=None):
+    st.markdown(f"### {agent_name} Response")
+    st.code(response, language=None)
+
+    if show_logs:
+        st.markdown("#### Detailed Reasoning / Debug Info")
+
+        log_data = {
+            "agent": agent_name,
+            "prompt": prompt,
+        }
+
+        if extra_details:
+            filtered_details = {
+                k: v for k, v in extra_details.items()
+                if k != "method"
+            }
+            log_data.update(filtered_details)
+
+        st.json(log_data)
+
+
 # -----------------------------
 # Execution Logic
 # -----------------------------
 if run_clicked:
+    st.session_state["display_mode"] = "run"
+
     if agent_choice == "-- choose --":
         st.warning("Please select an agent from the sidebar.")
 
@@ -109,56 +236,65 @@ if run_clicked:
             # Researcher
             # -----------------------------
             if agent_choice == "Researcher":
-                researcher = ResearcherAgent()
-                result = researcher.research(symbol)
-
-                render_result("Research Output", result)
+                response = researcher_module.respond(prompt)
+                st.session_state["last_agent_output"] = {
+                    "agent_name": "Researcher",
+                    "response": response,
+                    "prompt": prompt,
+                    "extra_details": {
+                        "extracted_symbol": symbol,
+                        "method": "respond()",
+                        "logic": "Fetches stock quote and searches RAG index for symbol",
+                    }
+                }
 
             # -----------------------------
             # Analyst
             # -----------------------------
             elif agent_choice == "Analyst":
-                researcher = ResearcherAgent()
-                research_data = researcher.research(symbol)
-
-                analyst = AnalystAgent()
-                result = analyst.analyze(research_data)
-
-                render_result("Research Input", research_data)
-                render_result("Analyst Output", result)
+                response = analyst_module.respond(prompt)
+                st.session_state["last_agent_output"] = {
+                    "agent_name": "Analyst",
+                    "response": response,
+                    "prompt": prompt,
+                    "extra_details": {
+                        "extracted_symbol": symbol,
+                        "method": "respond()",
+                        "logic": "Price > 60 -> SELL, Price < 55 -> BUY, else HOLD",
+                    }
+                }
 
             # -----------------------------
             # Portfolio Manager
             # -----------------------------
             elif agent_choice == "Portfolio Manager":
-                researcher = ResearcherAgent()
-                research_data = researcher.research(symbol)
-
-                analyst = AnalystAgent()
-                analysis = analyst.analyze(research_data)
-
-                pm = PortfolioManager()
-                order = pm.to_order(analysis)
-
-                render_result("Analyst Signal", analysis)
-                render_result("Generated Order", order)
+                response = portfolio_module.respond(prompt)
+                st.session_state["last_agent_output"] = {
+                    "agent_name": "Portfolio Manager",
+                    "response": response,
+                    "prompt": prompt,
+                    "extra_details": {
+                        "extracted_symbol": symbol,
+                        "method": "respond()",
+                        "logic": "Converts signal (BUY/SELL/HOLD) to order with qty=10",
+                    }
+                }
 
             # -----------------------------
             # Consensus
             # -----------------------------
             elif agent_choice == "Consensus":
-                researcher = ResearcherAgent()
-                research_data = researcher.research(symbol)
-
-                analyst = AnalystAgent()
-                signal_1 = analyst.analyze(research_data)
-                signal_2 = analyst.analyze(research_data)
-
-                consensus_agent = ConsensusAgent()
-                result = consensus_agent.consensus([signal_1, signal_2])
-
-                render_result("Signals", [signal_1, signal_2])
-                render_result("Consensus Output", result)
+                response = consensus_module.respond(prompt)
+                st.session_state["last_agent_output"] = {
+                    "agent_name": "Consensus",
+                    "response": response,
+                    "prompt": prompt,
+                    "extra_details": {
+                        "extracted_symbol": symbol,
+                        "method": "respond()",
+                        "logic": "Aggregates signals with confidence scoring",
+                    }
+                }
 
             # -----------------------------
             # Full Pipeline
@@ -265,18 +401,46 @@ if run_clicked:
 
 
 # -----------------------------
-# Logs
+# Unified Display Area
 # -----------------------------
-if show_logs:
-    st.divider()
-    st.subheader("System Notes")
+display_mode = st.session_state.get("display_mode")
 
-    st.info(
-        "Use Full Pipeline to run: Researcher → Analyst → Consensus → "
-        "Portfolio Manager → Orchestrator."
-    )
+if display_mode == "run":
+    if st.session_state.get("last_agent_output"):
+        output = st.session_state["last_agent_output"]
 
-    st.caption(
-        "This is a simulated trading system for learning. "
-        "Do not use it for real financial trading."
-    )
+        render_agent_response(
+            output["agent_name"],
+            output["response"],
+            output["prompt"],
+            output.get("extra_details")
+        )
+
+elif display_mode == "last":
+    active_symbol = st.session_state.get("active_observer_symbol", observer_symbol)
+    observations = get_observations(active_symbol)
+
+    st.markdown(f"### Last Observations: {active_symbol}")
+
+    if observations:
+        st.json(observations[-10:])
+    else:
+        st.info("No observations available yet. Start the observer first.")
+
+elif display_mode == "live":
+    active_symbol = st.session_state.get("active_observer_symbol", observer_symbol)
+
+    if st.session_state.get("observer_running"):
+        st.markdown(f"## Live Stream: {active_symbol}")
+
+        live_placeholder = st.empty()
+        observations = get_observations(active_symbol)
+
+        with live_placeholder.container():
+            if observations:
+                st.json(observations[-10:])
+            else:
+                st.info("Waiting for observations...")
+
+
+# No footer/system notes for clean UI
