@@ -42,7 +42,7 @@ agent_choice = st.sidebar.selectbox(
         "Consensus",
         "Full Pipeline",
         "Orchestrator",
-        "Extended Orchestrator / MCP",
+        "Extended Orchestrator",
     ],
 )
 
@@ -362,9 +362,9 @@ if run_clicked:
                 render_result("Orchestrator Result", result)
 
             # -----------------------------
-            # Extended Orchestrator / MCP
+            # Extended Orchestrator
             # -----------------------------
-            elif agent_choice == "Extended Orchestrator / MCP":
+            elif agent_choice == "Extended Orchestrator":
                 base = Orchestrator()
                 ext = ExtendedOrchestrator(
                     base_orchestrator=base,
