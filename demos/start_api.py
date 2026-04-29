@@ -17,9 +17,7 @@ from agents.observer_agent import (
 from audit.audit_logger import audit_record
 
 
-# --------------------------------------------------
-# Page Config
-# --------------------------------------------------
+# Page setup - make it look pretty
 st.set_page_config(
     page_title="Financial Agents Using MCP",
     page_icon="📊",
@@ -27,9 +25,7 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------
-# Styling
-# --------------------------------------------------
+# CSS magic for that modern glass-morphism look
 st.markdown(
     """
     <style>
@@ -102,9 +98,7 @@ st.markdown(
 )
 
 
-# --------------------------------------------------
-# Sidebar
-# --------------------------------------------------
+# Sidebar nav - where all the controls hang out
 st.sidebar.title("⚙️ Controls")
 
 page = st.sidebar.radio(
@@ -120,9 +114,7 @@ page = st.sidebar.radio(
 show_logs = st.sidebar.checkbox("Show logs", value=True)
 
 
-# --------------------------------------------------
-# Helper Functions
-# --------------------------------------------------
+# Helper functions - the glue that holds this together
 def normalize_order(order: dict):
     if order and "qty" in order and "quantity" not in order:
         order["quantity"] = order.pop("qty")
@@ -179,9 +171,7 @@ def run_full_pipeline(symbol: str):
     }
 
 
-# --------------------------------------------------
-# Landing Page
-# --------------------------------------------------
+# Landing page - first impressions matter
 if page == "Landing Page":
     st.markdown(
         """
@@ -327,9 +317,7 @@ if page == "Landing Page":
         st.metric("Audit Trail", "Active")
 
 
-# --------------------------------------------------
-# Dashboard
-# --------------------------------------------------
+# Dashboard - the main control center
 elif page == "Run Dashboard":
     st.title("📊 Financial Agents Dashboard")
 
@@ -480,9 +468,7 @@ elif page == "Run Dashboard":
         )
 
 
-# --------------------------------------------------
-# Observer Agent
-# --------------------------------------------------
+# Observer Agent - watching the markets so you don't have to
 elif page == "Observer Agent":
     st.title("📡 Real-Time Observer Agent")
 
@@ -514,9 +500,7 @@ elif page == "Observer Agent":
     st.caption("Use Start Observer, wait a few seconds, then click Show Observations.")
 
 
-# --------------------------------------------------
-# Architecture
-# --------------------------------------------------
+# Architecture diagram - showing off how it all fits together
 elif page == "Architecture":
     st.title("🧭 System Architecture")
 

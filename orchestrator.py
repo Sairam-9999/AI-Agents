@@ -161,9 +161,7 @@ def reject_order(order_id: str, reviewer: str = "admin"):
 
 
 class MCPAdapter:
-    """
-    Standard MCP-compatible wrapper around orchestrator/HITL actions.
-    """
+    """MCP wrapper - makes the orchestrator play nice with external systems."""
 
     def __init__(self, orchestrator: Orchestrator):
         self.orch = orchestrator

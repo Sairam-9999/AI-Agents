@@ -11,10 +11,7 @@ QUEUE_FILE = os.getenv("HITL_QUEUE_FILE", "hitl_queue.jsonl")
 
 
 class HITLQueue:
-    """
-    Persistent human-approval queue for high-value orders.
-    Writes/reads JSONL file for durability.
-    """
+    """The human-in-the-loop queue - keeps big orders on ice until someone approves them."""
 
     def __init__(self, file=QUEUE_FILE):
         self.file = file
@@ -81,9 +78,7 @@ class HITLQueue:
 
 
 class ExtendedOrchestrator:
-    """
-    Adds preflight checks, HITL queueing, and MCP adapter support.
-    """
+    """The beefed-up orchestrator with extra safety checks and human oversight."""
 
     def __init__(self, base_orchestrator: Orchestrator, hitl_threshold_notional=10000):
         self.base = base_orchestrator

@@ -27,9 +27,7 @@ st.set_page_config(
 
 st.title("Financial Agents Using MCP")
 
-# -----------------------------
-# Sidebar Controls
-# -----------------------------
+# Sidebar stuff - controls live here
 st.sidebar.header("Controls")
 
 agent_choice = st.sidebar.selectbox(
@@ -54,9 +52,7 @@ if "last_agent_output" not in st.session_state:
 if "display_mode" not in st.session_state:
     st.session_state["display_mode"] = None
 
-# -----------------------------
-# Observer Agent
-# -----------------------------
+# Observer Agent - our background watcher
 st.sidebar.divider()
 st.sidebar.subheader("Observer Agent")
 
@@ -96,9 +92,7 @@ if st.sidebar.button("Show Observations"):
     st.session_state["display_mode"] = "last"
 
 
-# -----------------------------
-# Helpers (defined before use)
-# -----------------------------
+# Helper functions we need upfront
 def extract_symbol_from_query(query: str):
     """Extract stock symbol from query (handles tickers and common company names)."""
     import re
@@ -160,9 +154,7 @@ def extract_symbol_from_query(query: str):
     return symbols[0] if symbols else None
 
 
-# -----------------------------
-# Main Input
-# -----------------------------
+# Main input area - where users type stuff
 st.subheader("Run Agent or Orchestrator")
 
 prompt = st.text_area(
@@ -171,7 +163,7 @@ prompt = st.text_area(
     height=140,
 )
 
-# Extract symbol from query and update observer (runs before sidebar renders)
+# Try to guess the stock symbol from what the user typed
 symbol = extract_symbol_from_query(prompt) or ""
 if symbol:
     st.session_state["observer_symbol"] = symbol
@@ -179,9 +171,7 @@ if symbol:
 run_clicked = st.button("Run")
 
 
-# -----------------------------
-# Helpers
-# -----------------------------
+# More helper functions
 def normalize_order(order: dict):
     if "qty" in order and "quantity" not in order:
         order["quantity"] = order.pop("qty")
@@ -215,9 +205,7 @@ def render_agent_response(agent_name, response, prompt, extra_details=None):
         st.json(log_data)
 
 
-# -----------------------------
-# Execution Logic
-# -----------------------------
+# The actual work happens here
 if run_clicked:
     st.session_state["display_mode"] = "run"
 
@@ -232,9 +220,7 @@ if run_clicked:
                 "prompt": prompt
             })
 
-            # -----------------------------
-            # Researcher
-            # -----------------------------
+            # Let's get this party started with the Researcher!
             if agent_choice == "Researcher":
                 response = researcher_module.respond(prompt)
                 st.session_state["last_agent_output"] = {
@@ -244,13 +230,11 @@ if run_clicked:
                     "extra_details": {
                         "extracted_symbol": symbol,
                         "method": "respond()",
-                        "logic": "Fetches stock quote and searches RAG index for symbol",
+                        "logic": "Grabs stock price and digs through docs for relevant info",
                     }
                 }
 
-            # -----------------------------
-            # Analyst
-            # -----------------------------
+            # Now it's the Analyst's turn to shine!
             elif agent_choice == "Analyst":
                 response = analyst_module.respond(prompt)
                 st.session_state["last_agent_output"] = {
@@ -260,13 +244,11 @@ if run_clicked:
                     "extra_details": {
                         "extracted_symbol": symbol,
                         "method": "respond()",
-                        "logic": "Price > 60 -> SELL, Price < 55 -> BUY, else HOLD",
+                        "logic": "Simple rules: expensive=SELL, cheap=BUY, middle=HOLD",
                     }
                 }
 
-            # -----------------------------
-            # Portfolio Manager
-            # -----------------------------
+            # Time for the Portfolio Manager to turn signals into orders!
             elif agent_choice == "Portfolio Manager":
                 response = portfolio_module.respond(prompt)
                 st.session_state["last_agent_output"] = {
@@ -276,13 +258,11 @@ if run_clicked:
                     "extra_details": {
                         "extracted_symbol": symbol,
                         "method": "respond()",
-                        "logic": "Converts signal (BUY/SELL/HOLD) to order with qty=10",
+                        "logic": "Turns the signal into an actual order (always 10 shares for now)",
                     }
                 }
 
-            # -----------------------------
-            # Consensus
-            # -----------------------------
+            # Consensus time - let's get everyone on the same page!
             elif agent_choice == "Consensus":
                 response = consensus_module.respond(prompt)
                 st.session_state["last_agent_output"] = {
@@ -292,13 +272,11 @@ if run_clicked:
                     "extra_details": {
                         "extracted_symbol": symbol,
                         "method": "respond()",
-                        "logic": "Aggregates signals with confidence scoring",
+                        "logic": "Combines multiple signals and figures out if we should trust it",
                     }
                 }
 
-            # -----------------------------
-            # Full Pipeline
-            # -----------------------------
+            # Full pipeline - let's run the whole shebang!
             elif agent_choice == "Full Pipeline":
                 researcher = ResearcherAgent()
                 analyst = AnalystAgent()
@@ -342,9 +320,7 @@ if run_clicked:
                 render_result("Order", order)
                 render_result("Execution Result", execution_result)
 
-            # -----------------------------
-            # Orchestrator
-            # -----------------------------
+            # Basic orchestrator test - let's see what it can do!
             elif agent_choice == "Orchestrator":
                 orchestrator = Orchestrator()
 
@@ -361,9 +337,7 @@ if run_clicked:
                 render_result("Sample Order", order)
                 render_result("Orchestrator Result", result)
 
-            # -----------------------------
-            # Extended Orchestrator
-            # -----------------------------
+            # Extended orchestrator - the fancy version with HITL
             elif agent_choice == "Extended Orchestrator":
                 base = Orchestrator()
                 ext = ExtendedOrchestrator(
@@ -400,9 +374,7 @@ if run_clicked:
             })
 
 
-# -----------------------------
-# Unified Display Area
-# -----------------------------
+# Display area - show results here
 display_mode = st.session_state.get("display_mode")
 
 if display_mode == "run":
@@ -443,4 +415,4 @@ elif display_mode == "live":
                 st.info("Waiting for observations...")
 
 
-# No footer/system notes for clean UI
+# Keeping it clean - no footer clutter

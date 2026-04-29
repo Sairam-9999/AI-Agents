@@ -12,10 +12,7 @@ if audit_dir and not os.path.exists(audit_dir):
 
 
 def audit_record(event_type: str, payload: dict, actor: str = None):
-    """
-    Records an audit event with timestamp, event type, payload, and optional actor.
-    Each record is a JSON line appended to AUDIT_FILE.
-    """
+    """Writes down what happened, when, and who did it - our digital paper trail."""
     rec = {
         "id": str(uuid.uuid4()),
         "ts": datetime.datetime.utcnow().isoformat() + "Z",

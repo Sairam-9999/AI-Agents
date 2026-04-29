@@ -223,7 +223,7 @@ It teaches:
 ## ⚠️ Disclaimer
 
 **This is a simulated trading system for learning.**
-**Do not use it for real world financial trading.**
+**Do not use it for real financial trading.**
 
 ---
 

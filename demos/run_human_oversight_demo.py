@@ -8,23 +8,23 @@ def main():
     base = Orchestrator()
     ext = ExtendedOrchestrator(base, hitl_threshold_notional=10000)
 
-    # Regular order
+    # Normal-sized order - should sail right through
     order1 = {"symbol": "AAPL", "quantity": 50, "price": 150, "side": "BUY"}
     print("Regular Order:")
     print(ext.preflight_and_maybe_enqueue(order1))
 
     time.sleep(1)
 
-    # High-value order
+    # Big money order - this one's gonna need approval
     order2 = {"symbol": "GOOG", "quantity": 200, "price": 100, "side": "BUY"}
     print("\nHigh-value Order:")
     print(ext.preflight_and_maybe_enqueue(order2))
 
-    # List queue
+    # Show what's waiting in the approval queue
     pending = ext.hitl.list_pending()
     print("\nPending:", pending)
 
-    # Approve first
+    # Approve the first one and let it run
     if pending:
         ts = pending[0]["ts"]
         ext.hitl.update_status(ts, "approved", reviewer="DemoUser")

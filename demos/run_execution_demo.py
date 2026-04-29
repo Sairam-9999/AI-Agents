@@ -3,7 +3,7 @@ from tools.execution_tool import place_order
 
 pm = PortfolioManager()
 
-# Valid order
+# This order should work fine
 valid_order = pm.to_order({
     "symbol": "AAPL",
     "signal": "BUY",
@@ -14,7 +14,7 @@ valid_order = pm.to_order({
 print("Attempting valid order:")
 print(place_order(valid_order))
 
-# Invalid order
+# This one's missing stuff - let's see it fail
 invalid_order = {
     "symbol": "TSLA",
     "signal": "SELL"

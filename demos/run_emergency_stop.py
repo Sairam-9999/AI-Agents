@@ -18,25 +18,25 @@ def main():
 
     print("\n=== Emergency Stop Demo ===\n")
 
-    # Step 1: Normal execution
+    # First - business as usual, everything works
     print("Step 1: Executing order (no stop)")
     print(orchestrator.execute(order))
 
-    # Step 2: Engage stop
+    # Hit the big red button! Stop everything!
     print("\nStep 2: Engaging emergency stop")
     emergency_stop_engage()
     print("Stop active:", is_emergency_engaged())
 
-    # Step 3: Blocked execution
+    # Try to trade - should get blocked cold
     print("\nStep 3: Attempt execution (should block)")
     print(orchestrator.execute(order))
 
-    # Step 4: Release stop
+    # Okay crisis over, release the stop
     print("\nStep 4: Releasing stop")
     emergency_stop_release()
     print("Stop active:", is_emergency_engaged())
 
-    # Step 5: Execute again
+    # Back to normal - trades working again
     print("\nStep 5: Executing again")
     print(orchestrator.execute(order))
 
