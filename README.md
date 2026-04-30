@@ -193,7 +193,7 @@ streamlit run streamlit_app.py
 ```powershell
 python orchestrator.py
 ```
-define main function for entry point in orchestrator.py
+define main() function for entry point in orchestrator.py
 
 ### Streamlit UI (another dashboard)
 ```powershell
