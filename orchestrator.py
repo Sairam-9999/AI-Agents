@@ -5,20 +5,20 @@ import time
 from collections import defaultdict
 
 from tools.execution_tool import ExecutionTool
-from security.guardrails import PreExecutionChecks, EmergencyStop
+from security.guardrails import PreExecutionChecks
 from audit.audit_logger import audit_record
+from agents.consensus import ConsensusAgent
 
 
 class Orchestrator:
     def __init__(self):
         self.exec_tool = ExecutionTool(simulate=True)
         self.guard = PreExecutionChecks()
-        self.stop = EmergencyStop()
 
     def execute(self, order: dict):
         audit_record("orchestrator_request", order)
 
-        if self.stop.is_triggered():
+        if is_emergency_engaged():
             audit_record("orchestrator_blocked", {"reason": "emergency_stop"})
             return {
                 "status": "blocked",
@@ -161,7 +161,9 @@ def reject_order(order_id: str, reviewer: str = "admin"):
 
 
 class MCPAdapter:
-    """MCP wrapper - makes the orchestrator play nice with external systems."""
+    """
+    Standard MCP-compatible wrapper around orchestrator/HITL actions.
+    """
 
     def __init__(self, orchestrator: Orchestrator):
         self.orch = orchestrator
@@ -198,33 +200,6 @@ class MCPAdapter:
             }
 
 
-class ConsensusAgent:
-    def __init__(self, threshold=0.6):
-        self.threshold = threshold
-
-    def consensus(self, signals: list):
-        scores = defaultdict(float)
-
-        for s in signals:
-            sig = s.get("signal", "HOLD").upper()
-            conf = float(s.get("confidence", 0.5))
-            scores[sig] += conf
-
-        total = sum(scores.values()) or 1.0
-
-        for k in scores.keys():
-            scores[k] /= total
-
-        decision = max(scores.items(), key=lambda kv: kv[1])[0]
-        support = dict(scores)
-        approved = support.get(decision, 0) >= self.threshold
-
-        return {
-            "decision": decision,
-            "support": support,
-            "threshold": self.threshold,
-            "approved": approved
-        }
 
 
 def main(prompt: str):

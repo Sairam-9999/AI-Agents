@@ -1,4 +1,7 @@
-"""Observer Agent - pretends to watch the market and jots down what it sees."""
+"""
+Observer Agent: simulates continuous monitoring of a symbol and writes observations.
+Provides a lightweight interface for starting a short demo stream.
+"""
 
 import time
 import threading

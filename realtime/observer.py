@@ -1,4 +1,7 @@
-"""Real-time observer - keeps an eye on the market and streams price updates."""
+"""
+Real-time observer module for live market monitoring.
+Provides high-level interface for streaming price data.
+"""
 
 from modules.data_feeds import stream_prices, get_latest_price
 

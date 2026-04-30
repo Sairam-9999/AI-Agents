@@ -9,7 +9,7 @@ from audit.audit_logger import audit_record
 def main():
     print("\n=== Full MCP Multi-Agent Demo ===\n")
 
-    # Fire up the researcher to dig up some data
+    # Step 1: Research
     researcher = ResearcherAgent()
     research_data = researcher.research("AAPL")
     audit_record("research", research_data)
@@ -17,7 +17,7 @@ def main():
 
     time.sleep(1)
 
-    # Analyst crunches the numbers and makes a call
+    # Step 2: Analysis
     analyst = AnalystAgent()
     analysis = analyst.analyze(research_data)
     audit_record("analysis", analysis)
@@ -25,7 +25,7 @@ def main():
 
     time.sleep(1)
 
-    # Portfolio manager turns the signal into an order
+    # Step 3: Portfolio
     pm = PortfolioManager()
     order = pm.to_order(analysis)
 
@@ -37,7 +37,7 @@ def main():
 
     time.sleep(1)
 
-    # Execute it through the fancy orchestrator with all the safety checks
+    # Step 4: Execution via Extended Orchestrator
     base = Orchestrator()
     ext = ExtendedOrchestrator(base, hitl_threshold_notional=10000)
 
