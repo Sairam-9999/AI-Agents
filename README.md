@@ -193,16 +193,7 @@ streamlit run streamlit_app.py
 ```powershell
 python orchestrator.py
 ```
-define something like below in the file
-if __name__ == "__main__":
-    o = Orchestrator()
-    order = {
-        "symbol": "AAPL",
-        "side": "BUY",
-        "quantity": 10,
-        "price": 100
-    }
-    print(o.execute(order))
+define main function for entry point in orchestrator.py
 
 ### Streamlit UI (another dashboard)
 ```powershell
