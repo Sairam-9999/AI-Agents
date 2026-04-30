@@ -192,6 +192,7 @@ streamlit run streamlit_app.py
 ### CLI Execution
 ```powershell
 python orchestrator.py
+```
 define something like below in the file
 if __name__ == "__main__":
     o = Orchestrator()
@@ -202,7 +203,6 @@ if __name__ == "__main__":
         "price": 100
     }
     print(o.execute(order))
-```
 
 ### Streamlit UI (another dashboard)
 ```powershell
