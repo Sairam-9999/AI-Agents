@@ -27,7 +27,7 @@ All coordinated through a central **orchestrator** and visualized in a real-time
 - 🔄 **Orchestrated** end-to-end workflow
 - 📈 **Live** market simulation (Observer agent)
 - 🖥️ **Interactive** Streamlit dashboard
-- 🔌 **REST API** support (FastAPI)
+- 🔌 **API-ready architecture** (FastAPI can be integrated as a backend layer)
 - 🛡️ **Built-in** guardrails & audit logging
 
 ---
@@ -84,7 +84,7 @@ All coordinated through a central **orchestrator** and visualized in a real-time
 | File | Description |
 |------|-------------|
 | `streamlit_app.py` | Interactive dashboard |
-| `demos/start_api.py` | FastAPI server |
+| `demos/start_api.py` | Alternative Streamlit-based interface (API-style demo) |
 
 ### 🧱 Supporting Layers
 
@@ -192,11 +192,21 @@ streamlit run streamlit_app.py
 ### CLI Execution
 ```powershell
 python orchestrator.py
+define something like below in the file
+if __name__ == "__main__":
+    o = Orchestrator()
+    order = {
+        "symbol": "AAPL",
+        "side": "BUY",
+        "quantity": 10,
+        "price": 100
+    }
+    print(o.execute(order))
 ```
 
-### API Mode
+### Streamlit UI (another dashboard)
 ```powershell
-python demos/start_api.py
+streamlit run demos/start_api.py
 ```
 
 ### Demo Scripts
